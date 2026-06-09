@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ app_name }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css?v=5" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Central Business District</p>
+        <h1>Coffee Price Directory</h1>
+      </div>
+      <form class="editor-login" id="editor-login">
+        <input id="editor-key" name="editor-key" type="password" placeholder="Editor key" autocomplete="off" />
+        <button type="submit">Set Editor</button>
+        <button type="button" class="ghost" id="clear-editor">Clear</button>
+        <span id="editor-status">Viewing</span>
+      </form>
+    </header>
+
+    <main>
+      <section class="control-band">
+        <div class="search-grid">
+          <label>
+            Search
+            <input id="search" type="search" placeholder="Shop, drink, location, chain" />
+          </label>
+          <label>
+            Min price
+            <input id="min-price" type="number" min="0" step="0.01" placeholder="0.00" />
+          </label>
+          <label>
+            Max price
+            <input id="max-price" type="number" min="0" step="0.01" placeholder="8.00" />
+          </label>
+          <label>
+            Sort
+            <select id="sort-by">
+              <option value="price">Price</option>
+              <option value="shop_name">Shop</option>
+              <option value="drink_type">Drink type</option>
+              <option value="chain">Chain</option>
+            </select>
+          </label>
+        </div>
+        <nav class="tabs" aria-label="Views">
+          <button type="button" class="tab active" data-view="dashboard">Dashboard</button>
+          <button type="button" class="tab" data-view="directory">Directory</button>
+          <button type="button" class="tab" data-view="compare">Compare</button>
+          <button type="button" class="tab" data-view="chains">Chains</button>
+          <button type="button" class="tab" data-view="editor">Editor</button>
+          <button type="button" class="tab" data-view="audit">Audit</button>
+        </nav>
+      </section>
+
+      <p class="message" id="message" role="status"></p>
+
+      <section id="dashboard" class="view active">
+        <div class="section-title">
+          <h2>Average Price Dashboard</h2>
+          <span id="dashboard-count"></span>
+        </div>
+        <div id="dashboard-summary" class="metric-grid"></div>
+        <div id="shop-average-list" class="average-list"></div>
+      </section>
+
+      <section id="directory" class="view">
+        <div class="section-title">
+          <h2>Shop Directory</h2>
+          <span id="shop-count"></span>
+        </div>
+        <div id="shop-list" class="shop-grid"></div>
+      </section>
+
+      <section id="compare" class="view">
+        <div class="section-title">
+          <h2>Price Compare</h2>
+          <span id="compare-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Drink</th>
+                <th>Type</th>
+                <th>Shop</th>
+                <th>Chain</th>
+                <th>Location</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody id="compare-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="chains" class="view">
+        <div class="section-title">
+          <h2>Chain Menus</h2>
+          <span id="chain-count"></span>
+        </div>
+        <div id="chain-list" class="chain-grid"></div>
+      </section>
+
+      <section id="editor" class="view">
+        <div class="section-title">
+          <h2>Editor</h2>
+          <span id="editor-name"></span>
+        </div>
+
+        <div class="editor-layout">
+          <form id="shop-form" class="panel shop-editor">
+            <div class="form-head">
+              <div>
+                <h3 id="shop-form-title">Add Shop</h3>
+                <span id="shop-form-state" class="form-state">New shop</span>
+              </div>
+              <button type="button" class="ghost small hidden" id="cancel-shop-edit">Cancel</button>
+            </div>
+            <input id="shop-id" name="shop_id" type="hidden" />
+            <label>Shop name <input id="shop-name" name="name" required autocomplete="off" /></label>
+            <div class="two-field">
+              <label>Location <input id="shop-location" name="location" required autocomplete="off" /></label>
+              <label>Chain <input id="shop-chain" name="chain_name" list="chain-options" placeholder="Independent" autocomplete="off" /></label>
+            </div>
+            <label>Address <input id="shop-address" name="address" autocomplete="off" /></label>
+            <label>Area <input id="shop-neighborhood" name="neighborhood" autocomplete="off" /></label>
+            <datalist id="chain-options"></datalist>
+            <button id="shop-submit" type="submit">Add Shop</button>
+          </form>
+
+          <div class="panel shop-list-panel">
+            <div class="section-title compact">
+              <h3>Current Shops</h3>
+              <span id="manage-shop-count"></span>
+            </div>
+            <div id="manage-shop-list" class="manage-list compact-list"></div>
+          </div>
+        </div>
+
+        <div class="editor-tools">
+          <details id="prices-tool" class="editor-details">
+            <summary>Prices</summary>
+            <form id="price-form" class="tool-form">
+              <label>Shop <select name="shop_id" id="price-shop" required></select></label>
+              <label>
+                Drink
+                <input id="price-drink-search" list="price-drink-options" placeholder="Search drink name or type" autocomplete="off" required />
+                <input name="drink_id" id="price-drink" type="hidden" />
+                <datalist id="price-drink-options"></datalist>
+                <span class="field-hint">Start typing, then choose the matching drink from the list.</span>
+              </label>
+              <button type="button" class="small ghost helper-button" id="add-missing-drink">Add missing drink</button>
+              <div class="two-field">
+                <label>Price <input name="amount" type="number" min="0" step="0.01" required /></label>
+                <label>Size
+                  <select name="size_label">
+                    <option value="">Not sure</option>
+                    <option value="400ml">400ml</option>
+                    <option value="450ml">450ml</option>
+                    <option value="500ml">500ml</option>
+                  </select>
+                </label>
+              </div>
+              <label>Notes <textarea name="notes" rows="3"></textarea></label>
+              <button type="submit">Save Price</button>
+              <p class="form-note success hidden" id="price-save-status"></p>
+            </form>
+          </details>
+
+          <details id="drinks-tool" class="editor-details">
+            <summary>Drinks</summary>
+            <form id="drink-form" class="tool-form">
+              <h3>Add Drink</h3>
+              <label>
+                Drink name
+                <input name="name" required placeholder="Iced Latte" autocomplete="off" />
+                <span class="field-hint">Use the menu name customers would search for.</span>
+              </label>
+              <label>
+                Type
+                <input name="drink_type" required list="drink-type-options" placeholder="Milk Coffee" autocomplete="off" />
+                <span class="field-hint">Group similar drinks, for example Nanyang Coffee, Milk Coffee, or Cold Coffee.</span>
+              </label>
+              <label>
+                Default size
+                <select name="default_size">
+                  <option value="">Not sure</option>
+                  <option value="400ml">400ml</option>
+                  <option value="450ml">450ml</option>
+                  <option value="500ml">500ml</option>
+                </select>
+                <span class="field-hint">Pick the usual size when the shop does not list one for a price.</span>
+              </label>
+              <label>
+                Description
+                <textarea name="description" rows="3" placeholder="Optional: short notes such as iced, oat milk, or signature drink."></textarea>
+                <span class="field-hint">Optional notes to help editors choose the right drink later.</span>
+              </label>
+              <datalist id="drink-type-options"></datalist>
+              <button type="submit">Add Drink</button>
+              <p class="form-note success hidden" id="drink-save-status"></p>
+            </form>
+            <div class="section-title compact">
+              <h3>Current Drinks</h3>
+              <span id="drink-count"></span>
+            </div>
+            <div id="drink-list" class="drink-list"></div>
+          </details>
+
+          <details class="editor-details">
+            <summary>Copy Menus</summary>
+            <form id="copy-form" class="tool-form">
+              <label>Source shop <select name="source_shop_id" id="copy-source" required></select></label>
+              <label>Target shop <select name="target_shop_id" id="copy-target" required></select></label>
+              <label>Selected drinks <select name="drink_ids" id="copy-drinks" multiple></select></label>
+              <label class="check"><input name="include_full_menu" type="checkbox" checked /> Full menu</label>
+              <label class="check"><input name="overwrite_existing" type="checkbox" /> Overwrite existing</label>
+              <button type="submit">Copy Menu</button>
+            </form>
+          </details>
+
+          <details class="editor-details">
+            <summary>Chain Templates</summary>
+            <form id="template-form" class="tool-form">
+              <label>Chain <select name="chain_id" id="template-chain" required></select></label>
+              <label>Drink <select name="drink_id" id="template-drink" required></select></label>
+              <div class="two-field">
+                <label>Template price <input name="amount" type="number" min="0" step="0.01" required /></label>
+                <label>Size
+                  <select name="size_label">
+                    <option value="">Not sure</option>
+                    <option value="400ml">400ml</option>
+                    <option value="450ml">450ml</option>
+                    <option value="500ml">500ml</option>
+                  </select>
+                </label>
+              </div>
+              <label>Notes <textarea name="notes" rows="3"></textarea></label>
+              <button type="submit">Save Template Item</button>
+            </form>
+            <form id="sync-form" class="tool-form compact-form">
+              <label>Chain <select name="chain_id" id="sync-chain" required></select></label>
+              <label class="check"><input name="overwrite_outlet_prices" type="checkbox" /> Overwrite outlet prices</label>
+              <button type="submit">Sync Outlets</button>
+            </form>
+          </details>
+        </div>
+      </section>
+
+      <section id="audit" class="view">
+        <div class="section-title">
+          <h2>Audit Log</h2>
+          <span id="audit-count"></span>
+        </div>
+        <div id="audit-list" class="audit-list"></div>
+      </section>
+    </main>
+
+    <script src="/static/js/app.js?v=5"></script>
+  </body>
+</html>
