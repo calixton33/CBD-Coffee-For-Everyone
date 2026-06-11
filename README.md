@@ -222,3 +222,16 @@ CORS_ORIGINS=https://your-production-domain.example
 The app accepts common hosted Postgres URLs such as `postgres://...` and `postgresql://...`, and normalizes them to the installed SQLAlchemy `psycopg` driver. Do not rely on the default SQLite database on Vercel: serverless functions are not a durable place to write application data, and the local `coffee_cbd.db` file is intentionally ignored by Git.
 
 If Vercel shows `FUNCTION_INVOCATION_FAILED`, check the function logs first. A missing `SECRET_KEY`, missing `DATABASE_URL`, or placeholder production value will make startup fail intentionally so the app does not run publicly with unsafe credentials or non-persistent storage.
+
+Production startup intentionally does not run the seed script, even if `AUTO_SEED=true`.
+The seed operation creates many related rows and can exceed Vercel Function execution
+limits if it runs during a web request. To load starter data into a hosted database,
+run the seed command once from a local machine or another maintenance environment with
+`DATABASE_URL` pointed at the production Postgres database:
+
+```bash
+export DATABASE_URL="postgresql+psycopg://..."
+export SECRET_KEY="your-production-secret"
+export AUTO_SEED=false
+python -m app.seed
+```

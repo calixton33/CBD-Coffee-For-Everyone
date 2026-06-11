@@ -62,10 +62,14 @@ class Settings:
         )
     )
 
+    @property
+    def is_production(self) -> bool:
+        return self.environment.strip().lower() == "production"
+
     def __post_init__(self) -> None:
         object.__setattr__(self, "database_url", _normalize_database_url(self.database_url))
 
-        if self.environment.strip().lower() == "production":
+        if self.is_production:
             if not self.secret_key.strip() or self.secret_key in PLACEHOLDER_SECRET_KEYS:
                 raise RuntimeError(
                     "Set a strong SECRET_KEY before running in production."

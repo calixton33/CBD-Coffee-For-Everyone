@@ -43,7 +43,7 @@ app.include_router(audit_log.router)
 @app.on_event("startup")
 def on_startup() -> None:
     create_db()
-    if settings.auto_seed:
+    if settings.auto_seed and not settings.is_production:
         with SessionLocal() as db:
             seed_database(db)
 

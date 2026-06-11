@@ -157,3 +157,33 @@ def test_database_url_normalizes_common_postgres_urls_to_installed_driver():
         _normalize_database_url("postgresql+psycopg://user:pass@example.com/db")
         == "postgresql+psycopg://user:pass@example.com/db"
     )
+
+
+def test_production_startup_does_not_run_seed(monkeypatch):
+    from app import main
+
+    seed_called = False
+
+    def fake_seed_database(db):
+        nonlocal seed_called
+        seed_called = True
+
+    class FakeSession:
+        def __enter__(self):
+            return object()
+
+        def __exit__(self, exc_type, exc, traceback):
+            return None
+
+    class FakeSettings:
+        auto_seed = True
+        is_production = True
+
+    monkeypatch.setattr(main, "settings", FakeSettings())
+    monkeypatch.setattr(main, "create_db", lambda: None)
+    monkeypatch.setattr(main, "SessionLocal", lambda: FakeSession())
+    monkeypatch.setattr(main, "seed_database", fake_seed_database)
+
+    main.on_startup()
+
+    assert seed_called is False
