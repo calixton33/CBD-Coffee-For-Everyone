@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from app.auth import hash_api_key
+from app.config import _normalize_database_url
 from app.database import Base
 from app.models import Chain, Drink, MenuItem, Shop, User, UserRole
 from app.routers.shops import _find_duplicate_shop
@@ -141,3 +142,18 @@ def test_size_category_uses_supported_ml_sizes():
     assert size_category("600ml") == "Not sure"
     assert size_category("Regular") == "Not sure"
     assert size_category(None) == "Not sure"
+
+
+def test_database_url_normalizes_common_postgres_urls_to_installed_driver():
+    assert (
+        _normalize_database_url("postgres://user:pass@example.com/db")
+        == "postgresql+psycopg://user:pass@example.com/db"
+    )
+    assert (
+        _normalize_database_url("postgresql://user:pass@example.com/db")
+        == "postgresql+psycopg://user:pass@example.com/db"
+    )
+    assert (
+        _normalize_database_url("postgresql+psycopg://user:pass@example.com/db")
+        == "postgresql+psycopg://user:pass@example.com/db"
+    )

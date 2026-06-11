@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -10,6 +12,8 @@ from app.config import settings
 from app.database import SessionLocal, create_db
 from app.routers import audit_log, chains, drinks, menus, shops, users
 from app.seed import seed_database
+
+APP_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(
     title=settings.app_name,
@@ -25,8 +29,8 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-Editor-Key"],
 )
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+app.mount("/static", StaticFiles(directory=APP_DIR / "static"), name="static")
+templates = Jinja2Templates(directory=APP_DIR / "templates")
 
 app.include_router(users.router)
 app.include_router(drinks.router)

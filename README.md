@@ -206,3 +206,19 @@ uvicorn app.main:app --reload
 ```
 
 For production, keep `SEED_DEMO_EDITORS=false`, set a strong `SECRET_KEY`, set `CORS_ORIGINS` to the real site origin, and run migrations with a tool such as Alembic.
+
+## Vercel Deployment
+
+Vercel can run this FastAPI app as a Python Function. Before deploying a production environment, configure these environment variables in Vercel:
+
+```text
+SECRET_KEY=<long random value>
+DATABASE_URL=<persistent PostgreSQL URL>
+AUTO_SEED=false
+SEED_DEMO_EDITORS=false
+CORS_ORIGINS=https://your-production-domain.example
+```
+
+The app accepts common hosted Postgres URLs such as `postgres://...` and `postgresql://...`, and normalizes them to the installed SQLAlchemy `psycopg` driver. Do not rely on the default SQLite database on Vercel: serverless functions are not a durable place to write application data, and the local `coffee_cbd.db` file is intentionally ignored by Git.
+
+If Vercel shows `FUNCTION_INVOCATION_FAILED`, check the function logs first. A missing `SECRET_KEY`, missing `DATABASE_URL`, or placeholder production value will make startup fail intentionally so the app does not run publicly with unsafe credentials or non-persistent storage.
